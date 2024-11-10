@@ -9,6 +9,9 @@ public:
     //Gets current position
     Vector2 GetPosition();
 
+    //Gets current speed
+    float GetSpeed();
+
     //Move by dx dy
     void Move(float dx, float dy);
 
@@ -30,7 +33,7 @@ private:
     Vector2 acceleration;
 
     //How fast the player can accelerate
-    float accelerationScalar = 0.8f;
+    float accelerationScalar = 0.6f;
 
     //How fast the player slows down
     const float deaccelerationMultiplier = 0.08f;

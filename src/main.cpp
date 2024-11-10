@@ -53,6 +53,7 @@ int main(void)
         // Zoom controls
         if (IsKeyDown(KEY_UP)) camera.zoom += 0.01f;  // Zoom in
         if (IsKeyDown(KEY_DOWN)) camera.zoom -= 0.01f;  // Zoom out
+        
 
         // Begin 2D rendering
         BeginDrawing();
@@ -69,13 +70,13 @@ int main(void)
 
         p->Draw();
 
-        float number = angle;
+        float number = p->GetSpeed();
         char buffer[50];
 
         std::sprintf(buffer, "%f",number );
 
         const char* result = buffer;
-        //DrawText(result, p->GetPosition().x, p->GetPosition().y, 30, BLACK);
+        DrawText(result, p->GetPosition().x, p->GetPosition().y, 30, BLACK);
         EndMode2D(); // End the camera mode
 
 

@@ -2,6 +2,11 @@
 #include <math.h>
 #include <raymath.h>
 
+static inline float CalculateSpeed(float vx, float vy)
+{
+    return sqrtf(vx * vx + vy * vy);
+}
+
 Player::Player(Vector2 initalPosition)
 {
     this->position = initalPosition;
@@ -13,6 +18,11 @@ Player::Player(Vector2 initalPosition)
 Vector2 Player::GetPosition()
 {
     return this->position;
+}
+
+float Player::GetSpeed()
+{
+    return CalculateSpeed(this->velocity.x, this->velocity.y);
 }
 
 void Player::Move(float dx, float dy)
@@ -27,24 +37,13 @@ void Player::ApplyAccelerationInDirection(float angle)
     this->acceleration.y = this->accelerationScalar * sinf(angle);
 }
 
-static inline float CalculateSpeed(float vx, float vy)
-{
-    return sqrtf(vx * vx + vy * vy);
-}
+
 
 void Player::Deaccelerate()
 {
     //acclerate opposite of the velocity.
     this->acceleration.x = -this->velocity.x * this->deaccelerationMultiplier;
     this->acceleration.y = -this->velocity.y * this->deaccelerationMultiplier;
-
-    //if its slow enough, stop it.
-    if ((CalculateSpeed(this->velocity.x,this->velocity.y)) < 0.1f)
-    {
-        this->acceleration = {0.0f , 0.0f};
-        this->velocity = {0.0f, 0.0f};
-    }
-
 }
 
 void Player::Update()
@@ -81,7 +80,7 @@ void Player::Draw()
 
     //scale original triangle
     //x scale factor is based on current speed.
-    float scaleFactorX = 1.0f +  CalculateSpeed(this->velocity.x, this->velocity.y) / this->maxSpeed;
+    float scaleFactorX = 1.0f + CalculateSpeed(this->velocity.x, this->velocity.y) / this->maxSpeed;
 
     p1 = Vector2Scale(p1, scaleFactorX);
     p2.x = scaleFactorX * p2.x;
