@@ -7,11 +7,17 @@ static inline float CalculateSpeed(float vx, float vy)
     return sqrtf(vx * vx + vy * vy);
 }
 
-Player::Player(Vector2 initalPosition, Color color)
+Player::Player(Vector2 initalPosition, float maxSpeed, float accelerationFactor, float deaccelerationMultipler, Color color, float scaleFactor)
 {
     this->position = initalPosition;
     this->velocity = {0.0f , 0.0f};
     this->acceleration = {0.0f, 0.0f};
+
+    this->maxSpeed = maxSpeed;
+    this->accelerationFactor = accelerationFactor;
+    this->deaccelerationMultipler = deaccelerationMultipler;
+
+    this->scaleFactor = scaleFactor;
 
     this->color = color;
 }
@@ -26,6 +32,11 @@ float Player::GetSpeed()
     return CalculateSpeed(this->velocity.x, this->velocity.y);
 }
 
+void Player::SetPosition(Vector2 pos)
+{
+    this->position = pos;
+}
+
 void Player::Move(float dx, float dy)
 {
     this->position.x += dx;
@@ -34,8 +45,8 @@ void Player::Move(float dx, float dy)
 
 void Player::ApplyAccelerationInDirection(float angle)
 {
-    this->acceleration.x = this->accelerationScalar * cosf(angle);
-    this->acceleration.y = this->accelerationScalar * sinf(angle);
+    this->acceleration.x = this->accelerationFactor * cosf(angle);
+    this->acceleration.y = this->accelerationFactor * sinf(angle);
 }
 
 void Player::SetAcceleration(Vector2 accel)
@@ -46,8 +57,8 @@ void Player::SetAcceleration(Vector2 accel)
 void Player::Deaccelerate()
 {
     //acclerate opposite of the velocity.
-    this->acceleration.x = -this->velocity.x * this->deaccelerationMultiplier;
-    this->acceleration.y = -this->velocity.y * this->deaccelerationMultiplier;
+    this->acceleration.x = -this->velocity.x * this->deaccelerationMultipler;
+    this->acceleration.y = -this->velocity.y * this->deaccelerationMultipler;
 }
 
 void Player::Update()
@@ -84,7 +95,7 @@ void Player::Draw()
 
     //scale original triangle
     //x scale factor is based on current speed.
-    float scaleFactorX = 1.0f + CalculateSpeed(this->velocity.x, this->velocity.y) / this->maxSpeed;
+    float scaleFactorX = this->scaleFactor + CalculateSpeed(this->velocity.x, this->velocity.y) / this->maxSpeed;
 
     p1 = Vector2Scale(p1, scaleFactorX);
     p2.x = scaleFactorX * p2.x;
@@ -106,4 +117,9 @@ void Player::Draw()
 void Player::SetColor(Color color)
 {
     this->color = color;
+}
+
+void Player::SetMaxSpeed(float speed)
+{
+    this->maxSpeed = speed;
 }

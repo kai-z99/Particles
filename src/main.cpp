@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <math.h>
 #include <iostream>
+#include <string>
 #include <vector>
 #include "raylib.h"
 #include "raymath.h"
@@ -17,18 +18,54 @@ int main(void)
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
 
-    SetTargetFPS(60); // Set the desired frame rate
+    SetTargetFPS(60);
+
+
+    char preset = 'a';
+
+    float maxSpeed;
+    float accel;
+    float deaccel;
+    int spread;
+    int amount;
+
+    switch (preset)
+    {
+    case 'a':
+        maxSpeed = 110.0f;
+        accel = 500.0f;
+        deaccel = 0.1f;
+        spread = 31000;
+        amount = 80000;
+        break;
+
+    case 'b':
+        maxSpeed = 8.0f;
+        accel = 5.0f;
+        deaccel = 0.1f;
+        spread = 1000;
+        amount = 80;
+    }
 
     std::vector<Player*> players;
 
-    for (int i = 0; i < 80; i++)
+    for (int i = 0; i < amount; i++)
     {
-        players.push_back(new Player((Vector2){GetRandomValue(-3100, 3100), GetRandomValue(-3100, 3100)}));
-        if (i == 0) players[i]->SetColor(GREEN);
+        players.push_back(new Player((Vector2){(float)GetRandomValue(-spread, spread), (float)GetRandomValue(-spread, spread)}, maxSpeed, accel, deaccel, {(unsigned char)GetRandomValue(0,255),(unsigned char)GetRandomValue(0,255),(unsigned char)GetRandomValue(0,255),255 }, 40.0f));
+        if (i == 0) 
+        {
+            players[i]->SetColor(GREEN);
+            players[i]->SetPosition({0.0f, 0.0f});
+        }
+            
+
     }   
+
+    int frame = 0;
 
     while (!WindowShouldClose()) {
         // Update
+        frame++;
 
         //Convert mouse position to world coordinates.
         Vector2 mousePosition = GetMousePosition();
@@ -55,6 +92,59 @@ int main(void)
             else
             {
                 if (i == 0) players[i]->Deaccelerate();
+                
+                //original
+                // if (Vector2Distance((players[i]->GetPosition()), {0.0f , 0.0f}) > 55000)
+                // {
+                //     players[i]->SetPosition({0.0f , 0.0f});
+                // }
+                
+                //Butterfly
+                // if (fabs(players[i]->GetPosition().x) + fabs(players[i]->GetPosition().y) > 55000)
+                // {
+                //     players[i]->SetPosition({0.0f , 0.0f});
+                // }
+
+                //circular border, one rotating spout
+                if (Vector2Distance((players[i]->GetPosition()), {0.0f , 0.0f}) > 55000)
+                {
+                    players[i]->SetPosition({ 50000.0f * (cosf((float)frame / 100.0f)) , 50000.0f * (sinf((float)frame / 100.0f))});
+                }
+
+                //circular border, one occilating spout
+                // if (Vector2Distance((players[i]->GetPosition()), {0.0f , 0.0f}) > 55000)
+                // {
+                //     players[i]->SetPosition({ 0.0f , 50000.0f * (sinf((float)frame / 100.0f))});
+                // }
+
+                //2 spout
+                // if (Vector2Distance((players[i]->GetPosition()), {0.0f , 0.0f}) > 55000)
+                // {
+                //     if (frame % 2 == 0) players[i]->SetPosition({ 50000.0f * (cosf((float)frame / 100.0f)) , 50000.0f * (sinf((float)frame / 100.0f))});
+                //     else players[i]->SetPosition({ 50000.0f * (cosf((float)frame / 100.0f + PI)) , 50000.0f * (sinf((float)frame / 100.0f + PI))});
+                // }
+
+                //2 spout uneven
+                // if (Vector2Distance((players[i]->GetPosition()), {0.0f , 0.0f}) > 55000)
+                // {
+                //     if (frame % 2 == 0) players[i]->SetPosition({ 50000.0f * (cosf((float)frame / 50.0f)) , 50000.0f * (sinf((float)frame / 100.0f))});
+                //     else players[i]->SetPosition({ 50000.0f * (cosf((float)frame /50.0f + PI)) , 50000.0f * (sinf((float)frame / 100.0f + PI))});
+                // }
+
+                //circular contracting border, one rotating spout
+                // if (Vector2Distance((players[i]->GetPosition()), {0.0f , 0.0f}) > (0.2f + fabs(sinf((float)frame / 100.0f))) * 55000)
+                // {
+                //     players[i]->SetPosition({ 5000.0f * (cosf((float)frame / 100.0f)) , 5000.0f * (sinf((float)frame / 100.0f))});
+                // }
+
+                //eye
+                // Vector2 p = players[i]->GetPosition();
+                // Vector2 s = {p.x * sinf((float)frame / 100.0f) , p.y * sinf((float)frame / 100.0f + (0.3f * PI) )};
+                // if (Vector2Distance(s, {0.0f , 0.0f}) > 55000)
+                // {
+                //     if (frame % 2 == 0) players[i]->SetPosition({ 50000.0f * (cosf((float)frame / 100.0f)) , 50000.0f * (sinf((float)frame / 100.0f))});
+                //     else players[i]->SetPosition({ 50000.0f * (cosf((float)frame / 100.0f + PI)) , 50000.0f * (sinf((float)frame / 100.0f + PI))});
+                // }
             }
             
             players[i]->Update();
@@ -66,8 +156,15 @@ int main(void)
         camera.target = Vector2Lerp(camera.target, players[0]->GetPosition(), smoothing);
 
         // Zoom controls
-        if (IsKeyDown(KEY_UP)) camera.zoom += 0.01f;  // Zoom in
-        if (IsKeyDown(KEY_DOWN)) camera.zoom -= 0.01f;  // Zoom out
+        // Zoom controls
+        float zoomFactor = 1.05f; // Adjust this factor to control zoom speed
+        float wheelMove = GetMouseWheelMove();
+
+        if (wheelMove != 0)
+        {
+            camera.zoom *= pow(zoomFactor, wheelMove);
+        }       
+
         if (IsKeyDown(KEY_SPACE)) camera.target = players[0]->GetPosition();
         
         // Begin 2D rendering
@@ -76,10 +173,11 @@ int main(void)
 
         BeginMode2D(camera); // Begin using the camera's viewport and transformations
         ClearBackground(BLACK);
+        
         // Draw a grid to help visualize movement
-        for (int y = -1500; y < 1500; y += 80) {
-            for (int x = -1500; x < 1500; x += 80) {
-                DrawRectangleLines(x, y, 80, 80, { 200, 200, 200, 105 });
+        for (int y = -3500; y < 3500; y += 80) {
+            for (int x = -3500; x < 3500; x += 80) {
+                //DrawRectangleLines(x, y, 80, 80, { 200, 200, 200, 105 });
             }
         }
 
@@ -89,9 +187,12 @@ int main(void)
         }
 
         EndMode2D(); // End the camera mode
+        std::string numberStr = std::to_string(camera.zoom);
+        const char* numberCStr = numberStr.c_str();
 
-        DrawFPS(10,10);
-        DrawText("Snake Game", 10, 30, 30, RED);
+        DrawText(numberCStr, 10, 10, 20, RED);
+        DrawFPS(10,30);
+        
 
         EndDrawing();
     }
