@@ -1,7 +1,9 @@
 #include <cstdio>
 #include <math.h>
 #include <iostream>
+#include <vector>
 #include "raylib.h"
+#include "raymath.h"
 #include "player.h"
 
 
@@ -17,70 +19,85 @@ int main(void)
 
     SetTargetFPS(60); // Set the desired frame rate
 
-    Player* p = new Player({0,0});
+    std::vector<Player*> players;
+
+    for (int i = 0; i < 50; i++)
+    {
+        players.push_back(new Player({i * 16.0f, i * 16.0f}));
+        if (i == 0) players[i]->SetColor(GREEN);
+    }   
 
     while (!WindowShouldClose()) {
         // Update
 
+        //Convert mouse position to world coordinates.
         Vector2 mousePosition = GetMousePosition();
-        Vector2 centerOfScreen = {1024.0f/2.0f, 768.0f/2.0f};
-        DrawCircleV(centerOfScreen, 2.0f, RED);
-        DrawCircleV(mousePosition, 2.0f, GREEN);
+        Vector2 mouseWorldPosition = GetScreenToWorld2D(mousePosition, camera);
 
-        std::cout << mousePosition.x - centerOfScreen.x << " , " << mousePosition.y - centerOfScreen.y << '\n';
-
-        float angle = atan2f(mousePosition.y - centerOfScreen.y, mousePosition.x - centerOfScreen.x);
-
-        if (angle < 0.0f) 
+        for (int i = 0; i < players.size(); i++)
         {
-            angle += 2.0f * PI;
-        }
+            Vector2 playerPos = players[i]->GetPosition();
+            float angle;
 
-        if (IsMouseButtonDown(0))
-        {
-            p->ApplyAccelerationInDirection(angle);
-        }
-        else
-        {
-            p->Deaccelerate();
+            if (i == 0) angle = atan2f(mouseWorldPosition.y - playerPos.y, mouseWorldPosition.x - playerPos.x);
+            else angle = atan2f(players[i - 1]->GetPosition().y - playerPos.y, players[i - 1]->GetPosition().x - playerPos.x);
+
+            if (angle < 0.0f) 
+            {
+                angle += 2.0f * PI;
+            }
+
+            if (IsMouseButtonDown(0))
+            {
+                players[i]->ApplyAccelerationInDirection(angle);
+            }
+            else
+            {
+                if (i == 0) players[i]->Deaccelerate();
+            }
+            
+            players[i]->Update();
         }
         
-        p->Update();
 
         // Update camera to follow player
-        camera.target = p->GetPosition();
+        float smoothing = 0.03f;
+        camera.target = Vector2Lerp(camera.target, players[0]->GetPosition(), smoothing);
 
         // Zoom controls
         if (IsKeyDown(KEY_UP)) camera.zoom += 0.01f;  // Zoom in
         if (IsKeyDown(KEY_DOWN)) camera.zoom -= 0.01f;  // Zoom out
+        if (IsKeyDown(KEY_SPACE)) camera.target = players[0]->GetPosition();
         
-
         // Begin 2D rendering
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(BLACK);
 
         BeginMode2D(camera); // Begin using the camera's viewport and transformations
 
         // Draw a grid to help visualize movement
-        for (int y = -1500; y < 1500; y += 40) {
-            for (int x = -1500; x < 1500; x += 40) {
-                DrawRectangleLines(x, y, 40, 40, LIGHTGRAY);
+        for (int y = -1500; y < 1500; y += 80) {
+            for (int x = -1500; x < 1500; x += 80) {
+                DrawRectangleLines(x, y, 80, 80, { 200, 200, 200, 105 });
             }
         }
 
-        p->Draw();
+        for (Player* p : players)
+        {
+            p->Draw();
+        }
 
-        float number = p->GetSpeed();
+        float number = players[0]->GetSpeed();
         char buffer[50];
 
         std::sprintf(buffer, "%f",number );
 
         const char* result = buffer;
-        DrawText(result, p->GetPosition().x, p->GetPosition().y, 30, BLACK);
+        //DrawText(result, p->GetPosition().x, p->GetPosition().y, 30, BLACK);
         EndMode2D(); // End the camera mode
 
-
-        DrawText("Move with arrow keys, Zoom with A/S", 10, 10, 20, DARKGRAY);
+        DrawFPS(10,10);
+       // DrawText("Move with arrow keys, Zoom with A/S", 10, 10, 20, DARKGRAY);
 
         EndDrawing();
     }

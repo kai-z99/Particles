@@ -7,12 +7,13 @@ static inline float CalculateSpeed(float vx, float vy)
     return sqrtf(vx * vx + vy * vy);
 }
 
-Player::Player(Vector2 initalPosition)
+Player::Player(Vector2 initalPosition, Color color)
 {
     this->position = initalPosition;
     this->velocity = {0.0f , 0.0f};
     this->acceleration = {0.0f, 0.0f};
 
+    this->color = color;
 }
 
 Vector2 Player::GetPosition()
@@ -37,7 +38,10 @@ void Player::ApplyAccelerationInDirection(float angle)
     this->acceleration.y = this->accelerationScalar * sinf(angle);
 }
 
-
+void Player::SetAcceleration(Vector2 accel)
+{
+    this->acceleration = accel;
+}
 
 void Player::Deaccelerate()
 {
@@ -96,7 +100,10 @@ void Player::Draw()
     p2 = Vector2Add(p2, this->position);
     p3 = Vector2Add(p3, this->position);
 
-    DrawTriangle(p1, p2, p3, RED);
+    DrawTriangle(p1, p2, p3, this->color);
 }
 
-
+void Player::SetColor(Color color)
+{
+    this->color = color;
+}
