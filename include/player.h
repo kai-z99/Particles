@@ -30,6 +30,7 @@ public:
     //Draws the player as a triangle. Streches based on current velocity
     void Draw();
 
+    //Set the coloe of the player
     void SetColor(Color color);
 
 private:

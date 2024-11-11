@@ -6,7 +6,7 @@
 #include "raymath.h"
 #include "player.h"
 
-
+//TODO: Collect the birds that are flying around to join you. Wild: grey, yours: red. Or somehtin along those lines?
 int main(void)
 {
     InitWindow(1024, 768, "raylib [core] example - basic window");
@@ -21,9 +21,9 @@ int main(void)
 
     std::vector<Player*> players;
 
-    for (int i = 0; i < 50; i++)
+    for (int i = 0; i < 80; i++)
     {
-        players.push_back(new Player({i * 16.0f, i * 16.0f}));
+        players.push_back(new Player((Vector2){GetRandomValue(-3100, 3100), GetRandomValue(-3100, 3100)}));
         if (i == 0) players[i]->SetColor(GREEN);
     }   
 
@@ -39,6 +39,7 @@ int main(void)
             Vector2 playerPos = players[i]->GetPosition();
             float angle;
 
+            //If its the player is the leader, the angle is to the mouse. If its not, the angle is to the 
             if (i == 0) angle = atan2f(mouseWorldPosition.y - playerPos.y, mouseWorldPosition.x - playerPos.x);
             else angle = atan2f(players[i - 1]->GetPosition().y - playerPos.y, players[i - 1]->GetPosition().x - playerPos.x);
 
@@ -71,10 +72,10 @@ int main(void)
         
         // Begin 2D rendering
         BeginDrawing();
-        ClearBackground(BLACK);
+        
 
         BeginMode2D(camera); // Begin using the camera's viewport and transformations
-
+        ClearBackground(BLACK);
         // Draw a grid to help visualize movement
         for (int y = -1500; y < 1500; y += 80) {
             for (int x = -1500; x < 1500; x += 80) {
@@ -87,17 +88,10 @@ int main(void)
             p->Draw();
         }
 
-        float number = players[0]->GetSpeed();
-        char buffer[50];
-
-        std::sprintf(buffer, "%f",number );
-
-        const char* result = buffer;
-        //DrawText(result, p->GetPosition().x, p->GetPosition().y, 30, BLACK);
         EndMode2D(); // End the camera mode
 
         DrawFPS(10,10);
-       // DrawText("Move with arrow keys, Zoom with A/S", 10, 10, 20, DARKGRAY);
+        DrawText("Snake Game", 10, 30, 30, RED);
 
         EndDrawing();
     }
